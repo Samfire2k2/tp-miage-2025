@@ -3,10 +3,8 @@
 ## Nom du(des) étudiant(e)(s) de ce monôme/binôme 
 WARNING: NE PAS OUBLIER DE MENTIONNER LES DEUX NOMS SI VOUS ETES EN BINOME!
 
-RAVARD Samuel
+RAVARD Samuel et
 GUILAVOGUI David Dogbo
-
-Commentaires éventuels des étudiants : #XXXXXX#
 
 ## Pré-requis 
 
@@ -58,25 +56,47 @@ TIP: [Rappel Git] Trois dépôts sont ici utilisés : le dépot Github de l'ense
 * Observer le code du projet `todolist-debut-ex1`
 
 *Le code est-il structuré en couches ? Quel problème ce code peut-il poser ?*
+Oui, le code est bien structuré en couches :
+Application.java : Cette classe constitue le point d’entrée de l’application. Elle sert de classe principale et permet de lancer l’application Spring Boot.
+ToDoItem.java : Il s’agit du modèle de domaine. Cette classe représente l’entité de domaine, incluant ses propriétés et comportements.
+ToDoItemRepository.java : C’est la couche de persistance. Il s’agit d’une interface qui étend CrudRepository, fournissant des méthodes CRUD pour interagir avec la base de données des objets ToDoItem.
+ToListController.java : Cette classe correspond à la couche de présentation. Elle gère les requêtes HTTP entrantes et les réponses sortantes. Ce contrôleur expose des endpoints REST permettant d’interagir avec les objets ToDoItem.
 
-
-
+Ce code peut poser les problèmes suivants :
+- Méthode de création incomplète : La méthode createTodoItem dans ToListController est inachevée. Sans implémentation complète, elle ne peut pas ajouter de nouveaux ToDoItem dans la base de données.
+- Absence de validation : Dans la méthode createTodoItem, la validation des données d’entrée du ToDoItem est absente, ce qui peut entraîner des erreurs ou des incohérences dans la base de données.
+- Violation du principe de séparation des responsabilités : Le contrôleur ToListController semble inclure une certaine logique métier dans la méthode finalContent, ce qui n’est pas idéal. Il serait préférable de déléguer cette logique à un service dédié
 
 *Où se trouve le code métier (voir la règle de gestion RG 1) ?*
+Le code métier concernant la règle de gestion RG 1 se trouve dans la méthode finalContent de la classe TodoListController. Cette règle ajoute une note "[LATE!]" au contenu d’un TodoItem si l’item a plus de 24 heures.
 
 *Cette règle est-elle facilement testable par un test unitaire ?*
+La règle de gestion RG 1, telle qu'implémentée dans la méthode finalContent, est testable unitairement. Toutefois, la principale difficulté réside dans sa dépendance à Instant.now(), qui renvoie l'instant présent. Ainsi, bien que la règle de gestion RG1 soit testable unitairement, il est essentiel de maîtriser les dépendance temporelle pour rendre ces tests stables et prédictibles.
+
 
 * Lancer une base PostgreSQL en Docker dans un terminal (on lance ici la base en mode interactif pour visualiser son activité. Pour la lancer en tâche de fond, remplacer les options `it` par `d` comme 'daemon'):
 ```bash
 docker run -it -e POSTGRES_PASSWORD=password -p 5432:5432 postgres
 ```
 *Expliquer cette ligne de commande (y compris les options utilisées)*
+Cette commande lance un conteneur Docker interactif avec PostgreSQL installé, configure le mot de passe de l’utilisateur administrateur postgres, et rend la base de données accessible via le port 5432 de votre machine hôte. voici la signification des options:
 
-* Compléter le code manquant dans la méthode `TodoListController.createTodoItem()`
+docker run: C’est la commande de base pour créer et lancer un conteneur Docker à partir d’une image spécifiée.
+
+-it: Cette option combine deux fonctionnalités. i signifie "interactif", permettant au conteneur de rester ouvert en mode interactif. t alloue un pseudo-TTY (terminal), ce qui rend le terminal du conteneur interactif, permettant ainsi de voir la sortie (logs, messages, etc.) directement dans le terminal.
+
+-e POSTGRES_PASSWORD=password: L’option -e permet de définir une variable d’environnement à l’intérieur du conteneur. Dans ce cas, POSTGRES_PASSWORD est la variable d’environnement utilisée par l’image Docker de PostgreSQL pour définir le mot de passe de l’utilisateur postgres (qui est l’utilisateur par défaut administrateur de la base de données).
+
+-p 5432:5432: Cette option fait correspondre le port 5432 du conteneur (port par défaut de PostgreSQL) au port 5432 de l’hôte. Cela signifie que l’on peut accéder à la base de données PostgreSQL du conteneur en utilisant le port 5432 de la machine locale.
+
+* Compléter le code manquant dans la méthode `TodoListController.createTodoItem()` (voir code)
 
 *Pourquoi `todoItemRepository` est-il `null` ? Quelle est la meilleure façon de l'injecter ?*
+Le todoItemRepository est nul car il n'a pas été correctement injecté dans TodoListController via l’injection de dépendances de Spring. Dans le code actuel, bien que TodoListController dispose d’un constructeur permettant d’injecter TodoItemRepository, nous avons également un constructeur par défaut vide qui ne fait aucune injection. En conséquence, Spring instancie TodoListController sans fournir TodoItemRepository, ce qui entraîne une valeur null.
 
-* Modifier le code en conséquence.
+Pour garantir une injection correcte, il est recommandé d’utiliser l’injection de dépendances par le constructeur. Cela implique de supprimer le constructeur vide afin d’imposer l’utilisation du constructeur prenant TodoItemRepository en paramètre. Spring pourra alors automatiquement injecter la dépendance requise, assurant ainsi un bon fonctionnement du contrôleur.
+
+* Modifier le code en conséquence. (voir code)
 
 * Tester vos endpoints avec un client REST.
 
@@ -116,6 +136,17 @@ Source : http://leanpub.com/get-your-hands-dirty-on-clean-architecture[Tom Hombe
   - la couche `domain` qui contient les entités (au sens DDD, pas au sens JPA). En général des classes complexes (méthodes riches, relations entre les entités)
 
 *Rappeler en quelques lignes les grands principes de l'architecture hexagonale.*
+L’architecture hexagonale, est un modèle de conception logicielle qui vise à créer une séparation claire entre la logique métier d’une application et les interfaces par lesquelles cette application interagit avec des systèmes externes, tels que des bases de données, des services web ou l’interface utilisateur. Voici ses principaux principes :
+Centralité de la logique métier : Au cœur de l’architecture se trouve la logique métier, souvent représentée par des entités et des cas d’utilisation. Ces éléments ne dépendent d’aucun cadre extérieur ou technologie spécifique.
+Ports : Les ports sont des interfaces qui définissent les points d’interaction nécessaires entre la logique métier et les agents externes. Il y a généralement des ports d’entrée pour les commandes entrantes (comme les requêtes HTTP) et des ports de sortie pour les interactions sortantes (comme la persistance des données).
+Adaptateurs : Les adaptateurs sont des implémentations concrètes des ports qui adaptent la communication entre la logique métier et les agents externes.
+Par exemple, un adaptateur web peut convertir des requêtes HTTP en appels de méthode sur les ports d’entrée, tandis qu’un adaptateur de persistance peut implémenter la logique nécessaire pour enregistrer des entités dans une base de données.
+Séparation des préoccupations : L’architecture hexagonale cherche à séparer les préoccupations en isolant la logique métier des détails techniques de l’infrastructure.
+
+Cela permet à la logique métier d’être indépendante et facile à tester, tandis que les adaptateurs peuvent être modifiés ou remplacés sans affecter le cœur de l’application.
+Flexibilité et évolutivité : Grâce à cette séparation, l’application devient plus flexible et évolutive. On peut facilement changer la technologie de la base de données ou les moyens de communication avec les systèmes externes sans impacter la logique métier.
+Facilité de test : L’architecture hexagonale facilite les tests automatisés, car la logique métier peut être testée sans nécessiter les infrastructures externes. Les tests peuvent se concentrer sur les comportements métier en utilisant des adaptateurs de test ou des mock objects.
+Déploiement indépendant : Les différentes parties de l’application peuvent être déployées indépendamment, ce qui est utile dans les environnements de microservices ou de cloud computing où différents composants peuvent être mis à jour séparément.
 
 Compléter ce code avec une fonctionnalité de création de `TodoItem`  persisté en base et appelé depuis un endpoint REST `POST /todos` qui :
 
