@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Le controlleur Spring MVC qui expose les endpoints REST
@@ -19,25 +20,22 @@ import org.springframework.web.bind.annotation.RestController;
  *
  */
 @RestController
+@RequiredArgsConstructor
 public class TodoListController {
 
 	private static final String LATE = "[LATE!]";
-	private TodoItemRepository todoItemRepository;
+	private final TodoItemRepository todoItemRepository;
 
-	public TodoListController(TodoItemRepository todoItemRepository) {
-		super();
-		this.todoItemRepository = todoItemRepository;
-	}
-	
-	public TodoListController() {
-		super();		
-	}
+//	public TodoListController(TodoItemRepository todoItemRepository) {
+//		super();
+//		this.todoItemRepository = todoItemRepository;
+//	}
+
 
 	@PostMapping("/todos")
 	@ResponseStatus(code = HttpStatus.CREATED)
 	public void createTodoItem(@RequestBody TodoItem todoItem) {
-		// Code à compléter
-		// ...
+		this.todoItemRepository.save(new TodoItem(todoItem.getId(),todoItem.getTime(), todoItem.getContent()));
 	}
 
 	@GetMapping("/todos")
